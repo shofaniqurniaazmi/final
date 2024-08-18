@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:go_router/go_router.dart';
+import 'package:nutritrack/presentation/widget/laoding_dialog.dart';
+import 'package:nutritrack/service/firebase/auth_exception_handler.dart';
+import 'package:nutritrack/service/firebase/authentication_service.dart';
 // import 'package:myapp/common/loading_dialog.dart';
 // import 'package:myapp/view/loginScreen.dart';
 // import 'package:myapp/service/authentication_service.dart';
 // import 'package:fluttertoast/fluttertoast.dart';
-
 
 class Signup extends StatefulWidget {
   const Signup({Key? key}) : super(key: key);
@@ -17,7 +21,9 @@ class _SignupState extends State<Signup> {
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+       final AuthenticationService _firebaseAuthService = AuthenticationService();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -30,37 +36,37 @@ class _SignupState extends State<Signup> {
     super.dispose();
   }
 
-  // void handleSignUp() {
-  //   // Display loading dialog
-  //   LoadingDialog.showLoadingDialog(context, "Loading...");
+  void handleSignUp() {
+    // Display loading dialog
+    LoadingDialog.showLoadingDialog(context, "Loading...");
 
-  //   // Get input values
-  //   String fullName = _fullNameController.text.trim();
-  //   String email = _emailController.text.trim();
-  //   String password = _passwordController.text.trim();
-  //   String confirmPassword = _confirmPasswordController.text.trim();
+    // Get input values
+    String fullName = _fullNameController.text.trim();
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+    String confirmPassword = _confirmPasswordController.text.trim();
 
-  //   // Perform sign up action
-  //   AuthenticationService()
-  //       .signupWithEmailAndPassword(
-  //           fullName: fullName,
-  //           email: email,
-  //           password: password,
-  //           confirmPassword: confirmPassword)
-  //       .then((status) {
-  //     // Hide loading dialog
-  //     LoadingDialog.hideLoadingDialog(context);
+    // Perform sign up action
+    _firebaseAuthService
+        .signupWithEmailAndPassword(
+            fullName: fullName,
+            email: email,
+            password: password,
+            confirmPassword: confirmPassword)
+        .then((status) {
+      // Hide loading dialog
+      LoadingDialog.hideLoadingDialog(context);
 
-  //     // Check status
-  //     if (status == AuthResultStatus.successful) {
-  //       Fluttertoast.showToast(msg: "Successful");
-  //       _showSignUpSuccessDialog();
-  //     } else {
-  //       final errorMsg = AuthExceptionHandler.getErrorMessage(status);
-  //       Fluttertoast.showToast(msg: errorMsg);
-  //     }
-  //   });
-  // }
+      // Check status
+      if (status == AuthResultStatus.successful) {
+        Fluttertoast.showToast(msg: "Successful");
+        _showSignUpSuccessDialog();
+      } else {
+        final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
+        Fluttertoast.showToast(msg: errorMsg);
+      }
+    });
+  }
 
   void _showSignUpSuccessDialog() {
     showDialog(
@@ -68,11 +74,13 @@ class _SignupState extends State<Signup> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         Future.delayed(const Duration(seconds: 2), () {
-          Navigator.of(context).pop();
-          Navigator.pushReplacementNamed(context, "/loginScreen");
+          // Navigator.of(context).pop();
+          // Navigator.pushReplacementNamed(context, "/loginScreen");
+          context.go('/login');
         });
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           content: Row(
             children: const [
               Icon(Icons.check_circle, color: Colors.green, size: 40),
@@ -222,7 +230,8 @@ class _SignupState extends State<Signup> {
                             ),
                             onPressed: () {
                               setState(() {
-                                _obscureConfirmPassword = !_obscureConfirmPassword;
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
                               });
                             },
                           ),
@@ -247,12 +256,13 @@ class _SignupState extends State<Signup> {
                       const SizedBox(height: 10),
                       ElevatedButton(
                         onPressed: () {
-                          // if (_formKey.currentState!.validate()) {
-                          //   handleSignUp();
-                          // }
+                          if (_formKey.currentState!.validate()) {
+                            handleSignUp();
+                          }
                         },
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 40, vertical: 15),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
@@ -266,6 +276,13 @@ class _SignupState extends State<Signup> {
                             fontSize: 20,
                           ),
                         ),
+                      ),
+                      const SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: () {
+                          context.go('/login');
+                        },
+                        child: Text('Sudah Memiliki Akun? Login'),
                       ),
                     ],
                   ),

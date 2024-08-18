@@ -1,5 +1,7 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nutritrack/firebase_options.dart';
 import 'package:nutritrack/presentation/pages/archive.dart';
 import 'package:nutritrack/presentation/pages/calender.dart';
 import 'package:nutritrack/presentation/pages/forget_screen.dart';
@@ -7,14 +9,20 @@ import 'package:nutritrack/presentation/pages/home.dart';
 import 'package:nutritrack/presentation/pages/kamera.dart';
 import 'package:nutritrack/presentation/pages/login_screen.dart';
 import 'package:nutritrack/presentation/pages/onboard.dart';
+import 'package:nutritrack/presentation/pages/profile.dart';
 import 'package:nutritrack/presentation/pages/sign_up_screen.dart';
 import 'package:nutritrack/presentation/pages/splash_screen.dart';
 import 'package:nutritrack/presentation/pages/user_clasification.dart';
 import 'package:nutritrack/presentation/pages/user_clasification2.dart';
-
-void main() {
-  runApp(const MyApp());
+import 'package:nutritrack/presentation/widget/bottom_bar.dart';
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(MyApp());
 }
+
 
 /// The route configuration.
 final GoRouter _router = GoRouter(
@@ -50,7 +58,7 @@ final GoRouter _router = GoRouter(
       },
     ),
     GoRoute(
-      path: '/fotget-password',
+      path: '/forget-password',
       builder: (BuildContext context, GoRouterState state) {
         return ForgotPasswordScreen();
       },
@@ -67,35 +75,45 @@ final GoRouter _router = GoRouter(
         return UserClassificationNext();
       },
     ),
-    GoRoute(
-      path: '/home',
-      builder: (BuildContext context, GoRouterState state) {
-        return HomePage();
+    // satu kesatuan home, archive, calender dan profile seharusnya menggunakan shell route
+    ShellRoute(
+      navigatorKey: GlobalKey<
+          NavigatorState>(), // Optional: navigator for nested navigation
+      builder: (BuildContext context, GoRouterState state, Widget child) {
+        return NavigationMenu(child: child);
       },
-    ),
-    GoRoute(
-      path: '/archive',
-      builder: (BuildContext context, GoRouterState state) {
-        return Archive();
-      },
-    ),
-    GoRoute(
-      path: '/calender',
-      builder: (BuildContext context, GoRouterState state) {
-        return Calendar();
-      },
-    ),
-    GoRoute(
-      path: '/camera',
-      builder: (BuildContext context, GoRouterState state) {
-        return Camera();
-      },
-    ),
-    GoRoute(
-      path: '/profile',
-      builder: (BuildContext context, GoRouterState state) {
-        return Camera();
-      },
+      routes: <RouteBase>[
+        GoRoute(
+          path: '/home',
+          builder: (BuildContext context, GoRouterState state) {
+            return HomePage();
+          },
+        ),
+        GoRoute(
+          path: '/calendar',
+          builder: (BuildContext context, GoRouterState state) {
+            return Calendar();
+          },
+        ),
+        GoRoute(
+          path: '/camera',
+          builder: (BuildContext context, GoRouterState state) {
+            return Camera();
+          },
+        ),
+        GoRoute(
+          path: '/archive',
+          builder: (BuildContext context, GoRouterState state) {
+            return Archive();
+          },
+        ),
+        GoRoute(
+          path: '/profile',
+          builder: (BuildContext context, GoRouterState state) {
+            return Profile();
+          },
+        ),
+      ],
     ),
   ],
 );

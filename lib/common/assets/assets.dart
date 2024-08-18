@@ -8,3 +8,13 @@ const String ibuHamilImage = 'assets/images/ibuhamil.png';
 const String welcomeImage = 'assets/images/welcome.jpg';
 const String dietImage = 'assets/images/diet.png';
 const String bulkingImage = 'assets/images/bulking.png';
+const String coverImage = 'assets/images/cover.png';
+const String sayurImage = 'assets/images/sayur.png';
+const String buahImage = 'assets/images/buah.png';
+const String ikanImage = 'assets/images/ikan.png';
+const String telurImage = 'assets/images/telur.png';
+const String sandwichImage = 'assets/images/sandwich.png';
+const String saladImage = 'assets/images/salad.png';
+const String capcayImage = 'assets/images/capcay.png';
+const String sopigaImage = 'assets/images/sop iga.png';
+

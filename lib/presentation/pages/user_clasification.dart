@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:nutritrack/common/assets/assets.dart';
 
 class UserClassificationScreen extends StatefulWidget {
   const UserClassificationScreen({Key? key}) : super(key: key);
@@ -30,25 +32,25 @@ class _UserClassificationScreenState extends State<UserClassificationScreen> {
                 children: [
                   _buildGridButton(
                     context,
-                    'assets/ibuhamil.png',
+                    ibuHamilImage,
                     'Ibu Hamil',
                     0,
                   ),
                   _buildGridButton(
                     context,
-                    'assets/balita.png',
+                    balitaImage,
                     'Balita',
                     1,
                   ),
                   _buildGridButton(
                     context,
-                    'assets/diet.png',
+                    dietImage,
                     'Diet',
                     2,
                   ),
                   _buildGridButton(
                     context,
-                    'assets/bulking.png',
+                    bulkingImage,
                     'Bulking',
                     3,
                   ),
@@ -68,11 +70,7 @@ class _UserClassificationScreenState extends State<UserClassificationScreen> {
                 ),
               ),
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => UserClassificationScreen()),
-                );
+                context.go('/user-clasification2');
               },
               child: const Text(
                 'Next',

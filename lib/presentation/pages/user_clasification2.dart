@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:async';
 
 import 'package:nutritrack/presentation/pages/login_screen.dart';
@@ -91,12 +92,13 @@ class UserClassificationNext extends StatelessWidget {
     );
 
     Timer(Duration(seconds: 3), () {
-      Navigator.of(context).pop();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (context) => LoginPage()), // Navigate to Halaman1
-      );
+      // Navigator.of(context).pop();
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(
+      //       builder: (context) => LoginPage()), // Navigate to Halaman1
+      // );
+      context.go('/home');
     });
   }
 

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nutritrack/common/assets/assets.dart';
 
 class GetStartedScreen extends StatelessWidget {
-  void _navigateToHomePage(BuildContext context) {
-    Navigator.pushNamed(
-        context, '/home'); // Ensure route is correctly named '/home'
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +74,7 @@ class GetStartedScreen extends StatelessWidget {
                     Align(
                       alignment: Alignment.centerRight,
                       child: ElevatedButton(
-                        onPressed: () => _navigateToHomePage(context),
+                        onPressed: () => context.go('/login'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
                               Colors.white, // Update to backgroundColor

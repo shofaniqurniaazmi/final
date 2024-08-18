@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:nutritrack/common/assets/assets.dart';
 import 'package:nutritrack/presentation/widget/article.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,7 +18,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           // Background image
           Image.asset(
-            'lib/assets/cover.png', // Replace with your background image asset path
+            coverImage, // Replace with your background image asset path
             fit: BoxFit.cover,
             height: double.infinity,
             width: double.infinity,
@@ -204,28 +205,28 @@ class _HomePageState extends State<HomePage> {
                           buildRecommendationCard(
                             context,
                             'Sayuran',
-                            'lib/assets/sayur.png', // Replace with your image asset path
+                            sayurImage, // Replace with your image asset path
                             'Membantu mengontrol asupan kalori dan memberikan serat yang penting untuk pencernaan.',
                           ),
                           SizedBox(width: 10.0),
                           buildRecommendationCard(
                             context,
                             'Buah-buahan',
-                            'lib/assets/buah.png', // Replace with your image asset path
+                            buahImage, // Replace with your image asset path
                             'Kaya akan vitamin dan mineral yang penting untuk kesehatan.',
                           ),
                           SizedBox(width: 10.0),
                           buildRecommendationCard(
                             context,
                             'Ikan',
-                            'lib/assets/ikan.png', // Replace with your image asset path
+                            ikanImage, // Replace with your image asset path
                             'Sumber protein dan lemak sehat yang baik untuk jantung.',
                           ),
                           SizedBox(width: 10.0),
                           buildRecommendationCard(
                             context,
                             'Telur',
-                            'lib/assets/telur.png', // Replace with your image asset path
+                            telurImage, // Replace with your image asset path
                             'Penting untuk membangun dan memperbaiki jaringan tubuh.',
                           ),
                           // Add more cards here if needed
@@ -251,28 +252,28 @@ class _HomePageState extends State<HomePage> {
                           buildRecommendationCard(
                             context,
                             'Sandwich',
-                            'lib/assets/sandwich.png', // Replace with your image asset path
+                            sandwichImage, // Replace with your image asset path
                             'Kaya akan vitamin dan mineral yang penting untuk kesehatan.',
                           ),
                           SizedBox(width: 10.0),
                           buildRecommendationCard(
                             context,
                             'Salad Buah',
-                            'lib/assets/salad.png', // Replace with your image asset path
+                            saladImage, // Replace with your image asset path
                             'Sumber protein dan lemak sehat yang baik untuk jantung.',
                           ),
                           SizedBox(width: 10.0),
                           buildRecommendationCard(
                             context,
                             'Capcay',
-                            'lib/assets/capcay.png', // Replace with your image asset path
+                            capcayImage, // Replace with your image asset path
                             'Penting untuk membangun dan memperbaiki jaringan tubuh.',
                           ),
                            SizedBox(width: 10.0),
                           buildRecommendationCard(
                             context,
                             'Sop Iga',
-                            'lib/assets/sop iga.png', // Replace with your image asset path
+                            sopigaImage, // Replace with your image asset path
                             'Penting untuk membangun dan memperbaiki jaringan tubuh.',
                           ),
                           // Add more cards here if needed
