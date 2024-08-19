@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:nutritrack/common/assets/assets.dart';
+import 'package:nutritrack/common/config/storage.dart';
 import 'package:nutritrack/presentation/widget/article.dart';
+import 'package:nutritrack/service/firebase/authentication_service.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -9,10 +11,27 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final AuthenticationService _firebaseAuth = AuthenticationService();
+  late Future<Map<String, dynamic>?> _userProfileFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfile();
+  }
+
+  void _fetchUserProfile() async {
+    final userId =
+        await SecureStorage().getUserId(); // Await the Future<String?>
+    if (userId != null) {
+      setState(() {
+        _userProfileFuture = _firebaseAuth.getProfileUser(userId);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final String username = 'User';
-
     return Scaffold(
       body: Stack(
         children: [
@@ -30,38 +49,55 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(10.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 8.0,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.person,
-                        size: 40.0,
-                        color: Colors.purple,
-                      ),
-                      SizedBox(width: 10.0),
-                      Text(
-                        'Hello, $username!',
-                        style: TextStyle(
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 20.0), // Space between the greeting box and pie chart
+                FutureBuilder<Map<String, dynamic>?>(
+                    future: _userProfileFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else if (!snapshot.hasData || snapshot.data == null) {
+                        return Text('No profile data');
+                      } else {
+                        final profile = snapshot.data!;
+                        // print(profile);
+                        final String username = profile['fullName'] ?? 'User';
+                        return Container(
+                          padding: EdgeInsets.all(16.0),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(10.0),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 8.0,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.person,
+                                size: 40.0,
+                                color: Colors.purple,
+                              ),
+                              SizedBox(width: 10.0),
+                              Text(
+                                'Hello, $username!',
+                                style: TextStyle(
+                                  fontSize: 18.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    }),
+                SizedBox(
+                    height:
+                        20.0), // Space between the greeting box and pie chart
                 Container(
                   padding: EdgeInsets.all(10.0),
                   decoration: BoxDecoration(
@@ -92,7 +128,8 @@ class _HomePageState extends State<HomePage> {
                             SizedBox(height: 10.0),
                             Container(
                               height: 150.0, // Height for the pie chart
-                              width: double.infinity, // Width to fit the container
+                              width:
+                                  double.infinity, // Width to fit the container
                               child: PieChart(
                                 PieChartData(
                                   sections: [
@@ -150,7 +187,8 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                       ),
-                      SizedBox(width: 20.0), // Space between the pie chart and text
+                      SizedBox(
+                          width: 20.0), // Space between the pie chart and text
                     ],
                   ),
                 ),
@@ -158,7 +196,8 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Positioned(
-            top: 330.0, // Adjusted to start below the greeting box and pie chart
+            top:
+                330.0, // Adjusted to start below the greeting box and pie chart
             left: 0.0,
             right: 0.0,
             child: Container(
@@ -197,11 +236,14 @@ class _HomePageState extends State<HomePage> {
                   ),
                   SizedBox(height: 10.0),
                   Container(
-                    height: 150.0, // Set the height of the container to fit the cards
+                    height:
+                        150.0, // Set the height of the container to fit the cards
                     child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal, // Enable horizontal scrolling
+                      scrollDirection:
+                          Axis.horizontal, // Enable horizontal scrolling
                       child: Row(
                         children: [
+                          // fething kedalam sini
                           buildRecommendationCard(
                             context,
                             'Sayuran',
@@ -244,9 +286,11 @@ class _HomePageState extends State<HomePage> {
                   ),
                   SizedBox(height: 10.0),
                   Container(
-                    height: 150.0, // Set the height of the container to fit the cards
+                    height:
+                        150.0, // Set the height of the container to fit the cards
                     child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal, // Enable horizontal scrolling
+                      scrollDirection:
+                          Axis.horizontal, // Enable horizontal scrolling
                       child: Row(
                         children: [
                           buildRecommendationCard(
@@ -269,7 +313,7 @@ class _HomePageState extends State<HomePage> {
                             capcayImage, // Replace with your image asset path
                             'Penting untuk membangun dan memperbaiki jaringan tubuh.',
                           ),
-                           SizedBox(width: 10.0),
+                          SizedBox(width: 10.0),
                           buildRecommendationCard(
                             context,
                             'Sop Iga',
@@ -290,7 +334,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget buildRecommendationCard(BuildContext context, String title, String imagePath, String description) {
+  Widget buildRecommendationCard(BuildContext context, String title,
+      String imagePath, String description) {
     return InkWell(
       onTap: () {
         Navigator.push(
