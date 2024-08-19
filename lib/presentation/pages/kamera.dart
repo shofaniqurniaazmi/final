@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:nutritrack/common/config/env.dart';
+import 'package:nutritrack/presentation/pages/detail_kamera1.dart';
+import 'package:nutritrack/presentation/widget/laoding_dialog.dart';
 import 'package:nutritrack/service/firebase/storage_service.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
@@ -39,7 +41,7 @@ class _CameraState extends State<Camera> {
     }
   }
 
-  Future<void> _processImageWithGemini(XFile image) async {
+  Future<String?> _processImageWithGemini(XFile image) async {
     final model = GenerativeModel(
       model: 'gemini-1.5-flash-latest',
       apiKey: apiKeyGemini,
@@ -54,6 +56,7 @@ class _CameraState extends State<Camera> {
         ])
       });
       print('Gemini AI response: ${response.text}');
+      return response.text;
     } catch (e) {
       print('Error processing image with Gemini: $e');
     }
@@ -71,7 +74,17 @@ class _CameraState extends State<Camera> {
       });
       print('Image path: $imagePath');
       try {
-        await _processImageWithGemini(picture);
+        LoadingDialog.showLoadingDialog(context, "Loading...");
+
+        String? responseGemini = await _processImageWithGemini(picture);
+
+        LoadingDialog.hideLoadingDialog(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailCamera1(imagePath: picture.path,responseGemini: responseGemini!,),
+          ),
+        );
       } catch (e) {
         print('Error uploading or processing image: $e');
         // Tampilkan pesan error ke pengguna

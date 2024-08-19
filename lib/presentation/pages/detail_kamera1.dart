@@ -5,8 +5,9 @@ import 'package:nutritrack/presentation/pages/detail_kamera2.dart';
 
 class DetailCamera1 extends StatefulWidget {
   final String imagePath;
+  final String responseGemini;
 
-  DetailCamera1({required this.imagePath});
+  DetailCamera1({required this.imagePath, required this.responseGemini});
 
   @override
   _DetailCamera1State createState() => _DetailCamera1State();

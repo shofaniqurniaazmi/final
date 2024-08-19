@@ -64,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
 
   void handleLogin() async {
     // Show loading dialog
-    // LoadingDialog.showLoadingDialog(context, "Loading...");
+    LoadingDialog.showLoadingDialog(context, "Loading...");
 
     // Attempt to log in with email and password
     AuthResultStatus status =
@@ -74,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     // Hide loading dialog
-    // LoadingDialog.hideLoadingDialog(context);
+    LoadingDialog.hideLoadingDialog(context);
 
     // Handle the result
     if (status == AuthResultStatus.successful) {
