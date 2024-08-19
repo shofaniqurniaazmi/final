@@ -1,29 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:nutritrack/common/assets/assets.dart';
+import 'package:nutritrack/common/config/storage.dart';
+import 'package:nutritrack/service/firebase/storage_service.dart';
 
-void main() {
-  runApp(MyApp());
+class Archive extends StatefulWidget {
+  @override
+  State<Archive> createState() => _ArchiveState();
 }
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Archive(),
-    );
+class _ArchiveState extends State<Archive> {
+  StorageFirebaseService _storageFirebaseService = StorageFirebaseService();
+  List<Map<String, dynamic>>? archiveDataFromDatabase;
+
+  Future<void> _getArchiveData() async {
+    String? userId = await SecureStorage().getUserId();
+    List<Map<String, dynamic>> data =
+        await _storageFirebaseService.getAllArchives(userId!);
+    setState(() {
+      archiveDataFromDatabase = data;
+    });
   }
-}
 
-class Archive extends StatelessWidget {
+  @override
+  void initState() {
+    super.initState();
+    _getArchiveData();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final archiveData = [
-      {'time': '08:00 19-06-2024', 'title': 'Nasi Goreng'},
-      {'time': '09:00 20-06-2024', 'title': 'Mie Goreng'},
-      {'time': '10:00 21-06-2024', 'title': 'Nasi Goreng'},
-      {'time': '10:00 21-06-2024', 'title': 'Nasi Goreng'},
-    ];
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -35,34 +41,44 @@ class Archive extends StatelessWidget {
         iconTheme: IconThemeData(color: Colors.white),
         leading: SizedBox(),
       ),
-      body: ListView.builder(
-        itemCount: archiveData.length,
-        itemBuilder: (context, index) {
-          return ArchiveItem(archiveData[index]);
-        },
-      ),
+      body: archiveDataFromDatabase == null
+          ? Center(child: CircularProgressIndicator())
+          : archiveDataFromDatabase!.isEmpty
+              ? Center(child: Text('No archive data available'))
+              : ListView.builder(
+                  itemCount: archiveDataFromDatabase!.length,
+                  itemBuilder: (context, index) {
+                    return ArchiveItem(archiveDataFromDatabase![index]);
+                  },
+                ),
     );
   }
 }
 
 class ArchiveItem extends StatelessWidget {
-  final Map<String, String> data;
+  final Map<String, dynamic> data;
 
   const ArchiveItem(this.data, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     // Split time and date
-    final timeParts = data['time']!.split(' ');
+    final timeParts = data['created_at'].toString().split(' ');
     final time = timeParts[0];
     final date = timeParts.length > 1 ? timeParts[1] : '';
 
     return InkWell(
       onTap: () {
+        print(data['image_url']);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => DetailPage(title: data['title']!),
+            builder: (context) => DetailPage(
+              content: data['content']!,
+              date: date,
+              time: time,
+              image: data['image_url'],
+            ),
           ),
         );
       },
@@ -78,16 +94,16 @@ class ArchiveItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              height: 100,
+              height: 200,
               width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.blue[100],
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
-              ),
-              child: Center(
-                child: Text(
-                  'Image Placeholder',
-                  style: TextStyle(color: Colors.black54),
+                child: Image.network(
+                  data['image_url'] ?? '',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Center(child: Text('Image not available'));
+                  },
                 ),
               ),
             ),
@@ -102,14 +118,21 @@ class ArchiveItem extends StatelessWidget {
                 if (date.isNotEmpty)
                   Text(
                     date,
-                    style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.black87),
+                    style: TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87),
                   ),
               ],
             ),
             SizedBox(height: 8.0),
             Text(
-              data['title']!,
-              style: TextStyle(fontSize: 18.0),
+              data['content'] ?? '',
+              style: TextStyle(
+                fontSize: 16.0,
+                overflow: TextOverflow.ellipsis,
+              ),
+              maxLines: 2,
             ),
           ],
         ),
@@ -194,37 +217,84 @@ class NutritionalDataChart extends StatelessWidget {
 }
 
 class DetailPage extends StatelessWidget {
-  final String title;
+  final String content;
+  final String date;
+  final String time;
+  final String image;
 
-  DetailPage({required this.title});
+  DetailPage(
+      {required this.content,
+      required this.date,
+      required this.time,
+      required this.image});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: Text('Detail'),
       ),
       body: SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            NutritionalDataChart(), // Move your chart here
-            ListTile(
-              title: Text('Total Nutrisi'),
-              subtitle: Text('100 kalori'),
-            ),
-            ListTile(
-              title: Text('Karbohidrat'),
-              subtitle: Text('50 gram'),
-            ),
-            ListTile(
-              title: Text('Protein'),
-              subtitle: Text('20 gram'),
-            ),
-            ListTile(
-              title: Text('Lemak'),
-              subtitle: Text('30 gram'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: <Widget>[
+              Container(
+                height: 200,
+                width: double.infinity,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: Image.network(
+                    image ?? '',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Center(child: Text('Image not available'));
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    time,
+                    style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                  ),
+                  if (date.isNotEmpty)
+                    Text(
+                      date,
+                      style: TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87),
+                    ),
+                ],
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Text(content),
+          
+              // NutritionalDataChart(), // Move your chart here
+              // ListTile(
+              //   title: Text('Total Nutrisi'),
+              //   subtitle: Text('100 kalori'),
+              // ),
+              // ListTile(
+              //   title: Text('Karbohidrat'),
+              //   subtitle: Text('50 gram'),
+              // ),
+              // ListTile(
+              //   title: Text('Protein'),
+              //   subtitle: Text('20 gram'),
+              // ),
+              // ListTile(
+              //   title: Text('Lemak'),
+              //   subtitle: Text('30 gram'),
+              // ),
+            ],
+          ),
         ),
       ),
     );

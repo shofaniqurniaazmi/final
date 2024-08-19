@@ -23,11 +23,6 @@ class _CameraState extends State<Camera> {
     _initializeCamera();
   }
 
-  Future<String> convertImageToBase64(String imagePath) async {
-    final bytes = await File(imagePath).readAsBytes();
-    return base64Encode(bytes);
-  }
-
   Future<void> _initializeCamera() async {
     try {
       final cameras = await availableCameras();
@@ -41,26 +36,7 @@ class _CameraState extends State<Camera> {
     }
   }
 
-  Future<String?> _processImageWithGemini(XFile image) async {
-    final model = GenerativeModel(
-      model: 'gemini-1.5-flash-latest',
-      apiKey: apiKeyGemini,
-    );
-
-    try {
-      var response = await model.generateContent({
-        Content.multi([
-          TextPart("Describe this image:"),
-          if (image != null)
-            DataPart("image/jpg", File(image.path).readAsBytesSync())
-        ])
-      });
-      print('Gemini AI response: ${response.text}');
-      return response.text;
-    } catch (e) {
-      print('Error processing image with Gemini: $e');
-    }
-  }
+ 
 
   Future<void> _takePicture() async {
     if (!cameraController!.value.isInitialized) {
@@ -74,15 +50,15 @@ class _CameraState extends State<Camera> {
       });
       print('Image path: $imagePath');
       try {
-        LoadingDialog.showLoadingDialog(context, "Loading...");
+        // LoadingDialog.showLoadingDialog(context, "Loading...");
 
-        String? responseGemini = await _processImageWithGemini(picture);
+        // String? responseGemini = await _processImageWithGemini(picture);
 
-        LoadingDialog.hideLoadingDialog(context);
+        // LoadingDialog.hideLoadingDialog(context);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => DetailCamera1(imagePath: picture.path,responseGemini: responseGemini!,),
+            builder: (context) => DetailCamera1(imagePath: picture.path,image: picture,),
           ),
         );
       } catch (e) {

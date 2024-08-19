@@ -44,15 +44,20 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _signInWithGoogle() async {
     try {
-      await _firebaseAuthService.loginWithGoogle(); // Gunakan await di sini
-      // Navigate to the user classification screen
-      Future<String?> userId = SecureStorage().getUserId();
-      Future<bool> isCompleteClasification =
-          _firebaseAuthService.isClassificationCompleted(userId as String);
-      if (await isCompleteClasification) {
-        context.go('/login');
+      await _firebaseAuthService.loginWithGoogle();
+
+      // Get userId from secure storage
+      String? userId = await SecureStorage().getUserId();
+
+      // Check if user classification is complete
+      bool isCompleteClassification =
+          await _firebaseAuthService.isClassificationCompleted(userId!);
+
+      if (isCompleteClassification) {
+        context.go('/home');
+      } else {
+        context.go('/user-classification');
       }
-      context.go('/user-clasification');
     } catch (e) {
       // Handle error (e.g., show a dialog or snackbar)
       print('Error signing in with Google: $e');
@@ -63,38 +68,40 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void handleLogin() async {
-    // Show loading dialog
-    LoadingDialog.showLoadingDialog(context, "Loading...");
+    if (_formKey.currentState!.validate()) {
+      // Show loading dialog
+      LoadingDialog.showLoadingDialog(context, "Loading...");
 
-    // Attempt to log in with email and password
-    AuthResultStatus status =
-        await _firebaseAuthService.loginWithEmailAndPassword(
-      email: _emailController.text,
-      password: _passwordController.text,
-    );
+      // Attempt to log in with email and password
+      AuthResultStatus status =
+          await _firebaseAuthService.loginWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
 
-    // Hide loading dialog
-    LoadingDialog.hideLoadingDialog(context);
+      // Hide loading dialog
+      LoadingDialog.hideLoadingDialog(context);
 
-    // Handle the result
-    if (status == AuthResultStatus.successful) {
-      Fluttertoast.showToast(msg: "Successfully logged in!");
+      // Handle the result
+      if (status == AuthResultStatus.successful) {
+        Fluttertoast.showToast(msg: "Successfully logged in!");
 
-      // Get user ID from secure storage
-      String? userId = await SecureStorage().getUserId();
+        // Get user ID from secure storage
+        String? userId = await SecureStorage().getUserId();
 
-      // Check if user classification is complete
-      bool isCompleteClassification =
-          await _firebaseAuthService.isClassificationCompleted(userId!);
+        // Check if user classification is complete
+        bool isCompleteClassification =
+            await _firebaseAuthService.isClassificationCompleted(userId!);
 
-      if (isCompleteClassification) {
-        context.go('/home');
+        if (isCompleteClassification) {
+          context.go('/home');
+        } else {
+          context.go('/user-classification');
+        }
       } else {
-        context.go('/user-clasification');
+        final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
+        Fluttertoast.showToast(msg: errorMsg);
       }
-    } else {
-      final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
-      Fluttertoast.showToast(msg: errorMsg);
     }
   }
 
@@ -169,19 +176,14 @@ class _LoginPageState extends State<LoginPage> {
                               });
                             },
                           ),
-                          label: Text(
+                          label: const Text(
                             'Password',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                        validator: (text) {
-                          if (text == null || text.isEmpty) {
-                            return 'Password is empty';
-                          }
-                          return null;
-                        },
+                        validator: _validatePassword,
                       ),
                       const SizedBox(height: 20),
                       Align(
@@ -202,11 +204,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 70),
                       ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            handleLogin();
-                          }
-                        },
+                        onPressed: handleLogin,
                         style: ElevatedButton.styleFrom(
                           elevation: 0,
                           minimumSize: const Size(300, 55),

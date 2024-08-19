@@ -1,153 +1,90 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:nutritrack/common/config/storage.dart';
 import 'dart:io';
 import 'package:nutritrack/presentation/pages/archive.dart';
+import 'package:nutritrack/presentation/widget/laoding_dialog.dart';
+import 'package:nutritrack/service/firebase/authentication_service.dart';
+import 'package:nutritrack/service/firebase/storage_service.dart';
 
-class DetailCamera2 extends StatelessWidget {
+class DetailCamera2 extends StatefulWidget {
   final String imagePath;
-  final int portion;
-  final Map<String, double> nutritionalData; // Data nutrisi
+  final String responseGemini;
+  final XFile image; // Data nutrisi
 
   DetailCamera2({
     required this.imagePath,
-    required this.portion,
-    required this.nutritionalData,
+    required this.responseGemini,
+    required this.image,
   });
+
+  @override
+  State<DetailCamera2> createState() => _DetailCamera2State();
+}
+
+class _DetailCamera2State extends State<DetailCamera2> {
+  StorageFirebaseService _storageFirebaseService = StorageFirebaseService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Scan Your Food'),
+        centerTitle: true,
         backgroundColor: Colors.purple,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Image.file(File(imagePath)),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: Text(
-              'Total $portion Porsi Makanan',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: ListView(
+          children: [
+            SizedBox(height: 40), // Space to push the image to the middle top
+            Center(
+              child: Image.file(
+                File(widget.imagePath),
+                width: 200,
+                height: 200,
+              ),
             ),
-          ),
-          NutritionalData(nutritionalData: nutritionalData), // Pass data nutrisi
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                // Navigasi ke halaman Archive
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Archive(),
+            SizedBox(height: 16.0), // Space between image and description
+            Text(
+              // "Lorem ipsum odor amet, consectetuer adipiscing elit. Proin nam suscipit, hendrerit diam elementum mattis. Eleifend vehicula justo fames suscipit dui id. Sociosqu vel lectus odio purus vulputate elit etiam convallis ante. Commodo viverra dis imperdiet vel tortor accumsan aptent. Massa penatibus non placerat vulputate montes tincidunt cursus. In quis class purus nibh eu nascetur ut. Dolor fermentum ut nec aptent sem lacus imperdiet iaculis nascetur. Lorem porttitor parturient placerat mauris natoque. Quis eget malesuada facilisis pulvinar netus arcu. Mollis nisl elit himenaeos condimentum eu arcu amet elementum. Sagittis ex est habitasse at varius feugiat consectetur ridiculus. Suscipit cursus libero conubia sagittis est imperdiet, blandit odio dapibus. Augue est vehicula vel laoreet finibus convallis. Vel per nibh odio gravida justo ridiculus natoque sapien sagittis. Bibendum vehicula fames pharetra curabitur finibus nulla etiam netus. Amet luctus urna nam leo odio. Augue consectetur vulputate dui taciti tempor felis per nostra. Ante aenean risus hac phasellus orci. Ornare aliquam pretium potenti a augue massa class vulputate. Dis non curae ut sapien vel aptent class cras? Tempus mi augue lectus magna vivamus amet. Purus ex fermentum risus ornare augue convallis metus. Vehicula dui maximus porta sagittis volutpat et aptent. Augue natoque malesuada sapien phasellus aptent cursus mus eleifend metus. Quis ex magnis urna; placerat sagittis purus.",
+              '${widget.responseGemini}',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
+              textAlign: TextAlign.start,
+            ),
+            SizedBox(
+                height: 16.0), // Space between description and nutritional data
+            // NutritionalData(nutritionalData: nutritionalData), // Pass data nutrisi
+            Center(
+              child: ElevatedButton(
+                onPressed: () async {
+                  String? userId = await SecureStorage().getUserId();
+                  String urlImage = await _storageFirebaseService
+                      .uploadImageToFirebase(widget.imagePath);
+                  bool is_successfull =
+                      await _storageFirebaseService.uploadDataArchive(
+                          userId!, urlImage, widget.responseGemini);
+                  if (is_successfull) {
+                    context.go('/archive');
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+                child: Text(
+                  'SAVE',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
               ),
-              child: Text(
-                'SAVE',
-                style: TextStyle(fontSize: 16),
-              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class NutritionalData extends StatelessWidget {
-  final Map<String, double> nutritionalData;
-
-  NutritionalData({required this.nutritionalData});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0),
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 8.0,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: nutritionalData.entries.map((entry) {
-          return NutritionalBar(
-            label: entry.key,
-            value: entry.value,
-            color: _getColorForLabel(entry.key),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Color _getColorForLabel(String label) {
-    switch (label) {
-      case 'Karbohidrat':
-        return Colors.orange;
-      case 'Protein':
-        return Colors.green;
-      case 'Vitamin':
-        return Colors.red;
-      case 'Mineral':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-}
-
-class NutritionalBar extends StatelessWidget {
-  final String label;
-  final double value;
-  final Color color;
-
-  NutritionalBar({required this.label, required this.value, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              label,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(
-            flex: 5,
-            child: LinearProgressIndicator(
-              value: value / 100,
-              backgroundColor: Colors.grey[300],
-              color: color,
-              minHeight: 10,
-            ),
-          ),
-          SizedBox(width: 8),
-          Text(
-            '${value.toInt()}%',
-            style: TextStyle(fontSize: 16, color: Colors.black),
-          ),
-        ],
+            SizedBox(height: 40), // Space below the button
+          ],
+        ),
       ),
     );
   }
