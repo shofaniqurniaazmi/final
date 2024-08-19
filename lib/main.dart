@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nutritrack/firebase_options.dart';
 import 'package:nutritrack/presentation/pages/archive.dart';
 import 'package:nutritrack/presentation/pages/calender.dart';
 import 'package:nutritrack/presentation/pages/forget_screen.dart';
@@ -17,9 +16,7 @@ import 'package:nutritrack/presentation/pages/user_clasification2.dart';
 import 'package:nutritrack/presentation/widget/bottom_bar.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp();
   runApp(MyApp());
 }
 
