@@ -11,7 +11,8 @@ class UserClassificationScreen extends StatefulWidget {
 }
 
 class _UserClassificationScreenState extends State<UserClassificationScreen> {
-  List<bool> _selected = List.filled(4, false);
+  int _selectedIndex = -1; // Track the index of the selected classification
+  String _selectedClassification = ''; // Store the selected classification
 
   @override
   Widget build(BuildContext context) {
@@ -30,30 +31,10 @@ class _UserClassificationScreenState extends State<UserClassificationScreen> {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 children: [
-                  _buildGridButton(
-                    context,
-                    ibuHamilImage,
-                    'Ibu Hamil',
-                    0,
-                  ),
-                  _buildGridButton(
-                    context,
-                    balitaImage,
-                    'Balita',
-                    1,
-                  ),
-                  _buildGridButton(
-                    context,
-                    dietImage,
-                    'Diet',
-                    2,
-                  ),
-                  _buildGridButton(
-                    context,
-                    bulkingImage,
-                    'Bulking',
-                    3,
-                  ),
+                  _buildGridButton(context, ibuHamilImage, 'Ibu Hamil', 0),
+                  _buildGridButton(context, balitaImage, 'Balita', 1),
+                  _buildGridButton(context, dietImage, 'Diet', 2),
+                  _buildGridButton(context, bulkingImage, 'Bulking', 3),
                 ],
               ),
             ),
@@ -70,7 +51,14 @@ class _UserClassificationScreenState extends State<UserClassificationScreen> {
                 ),
               ),
               onPressed: () {
-                context.go('/user-clasification2');
+                if (_selectedClassification.isNotEmpty) {
+                  print('Selected Classification: $_selectedClassification');
+                  // Convert the selected classification to a query parameter
+                  context.go('/user-clasification2?selected=$_selectedClassification');
+                } else {
+                  // Optionally, show a message indicating no selection
+                  print('No classification selected.');
+                }
               },
               child: const Text(
                 'Next',
@@ -91,8 +79,8 @@ class _UserClassificationScreenState extends State<UserClassificationScreen> {
       BuildContext context, String imagePath, String text, int index) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: _selected[index]
-            ? Color.fromARGB(255, 82, 8, 85)
+        backgroundColor: _selectedIndex == index
+            ? const Color.fromARGB(255, 82, 8, 85)
             : const Color.fromARGB(255, 230, 138, 253),
         shadowColor: Colors.grey,
         elevation: 5,
@@ -102,7 +90,13 @@ class _UserClassificationScreenState extends State<UserClassificationScreen> {
       ),
       onPressed: () {
         setState(() {
-          _selected[index] = !_selected[index];
+          if (_selectedIndex != index) {
+            _selectedIndex = index;
+            _selectedClassification = text;
+          } else {
+            _selectedIndex = -1; // Deselect if the same button is pressed
+            _selectedClassification = '';
+          }
         });
       },
       child: Stack(
@@ -126,7 +120,7 @@ class _UserClassificationScreenState extends State<UserClassificationScreen> {
               ),
             ],
           ),
-          if (_selected[index])
+          if (_selectedIndex == index)
             const Positioned(
               top: 8,
               right: 8,

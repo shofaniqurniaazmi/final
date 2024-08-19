@@ -10,7 +10,7 @@ class AuthenticationService {
   AuthResultStatus status = AuthResultStatus.undefined;
   SecureStorage _secureStorage = SecureStorage();
 
-  // Login dengan email dan password
+  // Login with email and password
   Future<AuthResultStatus> loginWithEmailAndPassword({
     required String email,
     required String password,
@@ -27,13 +27,17 @@ class AuthenticationService {
       } else {
         status = AuthResultStatus.undefined;
       }
-    } catch (msg) {
-      status = AuthExceptionHandler.handleException(msg);
+    } catch (e) {
+      if (e is FirebaseAuthException) {
+        status = AuthExceptionHandler.handleException(e);
+      } else {
+        status = AuthResultStatus.undefined;
+      }
     }
     return status;
   }
 
-  // Signup user dengan email dan password
+  // Signup user with email and password
   Future<AuthResultStatus> signupWithEmailAndPassword({
     required String fullName,
     required String email,
@@ -46,6 +50,7 @@ class AuthenticationService {
         email: email,
         password: password,
       );
+      print(authResult.credential == null);
       if (authResult.user != null) {
         _saveUserDetails(
           fullName: fullName,
@@ -54,18 +59,22 @@ class AuthenticationService {
         );
         status = AuthResultStatus.successful;
       } else {
+        print('something wrong');
+      }
+    } catch (e) {
+      if (e is FirebaseAuthException) {
+        status = AuthExceptionHandler.handleException(e);
+      } else {
+        print(e);
         status = AuthResultStatus.undefined;
       }
-    } catch (msg) {
-      status = AuthExceptionHandler.handleException(msg);
     }
     return status;
   }
 
-  // Login dengan Google
+  // Login with Google
   Future<AuthResultStatus> loginWithGoogle() async {
     try {
-      // Memicu autentikasi Google Sign-In
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
       if (googleUser != null) {
@@ -94,13 +103,17 @@ class AuthenticationService {
       } else {
         status = AuthResultStatus.undefined;
       }
-    } catch (msg) {
-      status = AuthExceptionHandler.handleException(msg);
+    } catch (e) {
+      if (e is FirebaseAuthException) {
+        status = AuthExceptionHandler.handleException(e);
+      } else {
+        status = AuthResultStatus.undefined;
+      }
     }
     return status;
   }
 
-  // Fungsi untuk menyimpan detail user ke Firestore
+  // Save user details to Firestore
   void _saveUserDetails({
     required String fullName,
     required String email,
@@ -114,11 +127,12 @@ class AuthenticationService {
     });
   }
 
-  // Fungsi untuk submit user classification
+  // Submit user classification
   Future<void> submitUserClassification({
     required String userId,
     required double weight,
     required double height,
+    required String classification,
     required int age,
     required String gender,
     required BuildContext context,
@@ -127,20 +141,19 @@ class AuthenticationService {
       await FirebaseFirestore.instance.collection('users').doc(userId).update({
         'weight': weight,
         'height': height,
+        'classification': classification,
         'age': age,
         'gender': gender,
         'classificationCompleted': true,
       });
 
-      // Arahkan user ke halaman home setelah mengisi data classification
       context.go('/home');
     } catch (e) {
       print('Submit classification error: $e');
-      // Handle error, seperti menampilkan snackbar atau dialog
     }
   }
 
-  // Fungsi untuk mengecek apakah user sudah melengkapi data klasifikasi
+  // Check if user has completed classification
   Future<bool> isClassificationCompleted(String userId) async {
     try {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
@@ -150,7 +163,6 @@ class AuthenticationService {
 
       if (userDoc.exists && userDoc.data() != null) {
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-
         return userData['classificationCompleted'] ?? false;
       } else {
         return false;
@@ -158,6 +170,49 @@ class AuthenticationService {
     } catch (e) {
       print('Error checking classificationCompleted: $e');
       return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getProfileUser(String userId) async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+
+      if (userDoc.exists && userDoc.data() != null) {
+        // Return the user data as a Map<String, dynamic>
+        return userDoc.data() as Map<String, dynamic>;
+      } else {
+        // Document does not exist
+        return null;
+      }
+    } catch (e) {
+      // Handle errors here
+      print('Error fetching user profile: $e');
+      return null;
+    }
+  }
+
+  Future<void> logout(BuildContext context) async {
+    try {
+      // Sign out from Firebase Authentication
+      await FirebaseAuth.instance.signOut();
+
+      // Sign out from Google Sign-In if the user is signed in with Google
+      final googleSignIn = GoogleSignIn();
+      if (await googleSignIn.isSignedIn()) {
+        await googleSignIn.signOut();
+      }
+
+      // Clear user data from secure storage
+      await _secureStorage.deleteUserId();
+
+      // Redirect to the login page or any other page
+      context.go('/login'); // Update the route as needed
+    } catch (e) {
+      print('Logout error: $e');
+      // Optionally, show an error message to the user
     }
   }
 }

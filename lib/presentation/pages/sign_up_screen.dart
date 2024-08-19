@@ -38,7 +38,7 @@ class _SignupState extends State<Signup> {
 
   void handleSignUp() {
     // Display loading dialog
-    LoadingDialog.showLoadingDialog(context, "Loading...");
+    // LoadingDialog.showLoadingDialog(context, "Loading...");
 
     // Get input values
     String fullName = _fullNameController.text.trim();
@@ -55,7 +55,7 @@ class _SignupState extends State<Signup> {
             confirmPassword: confirmPassword)
         .then((status) {
       // Hide loading dialog
-      LoadingDialog.hideLoadingDialog(context);
+      // LoadingDialog.hideLoadingDialog(context);
 
       // Check status
       if (status == AuthResultStatus.successful) {

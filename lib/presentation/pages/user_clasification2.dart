@@ -2,9 +2,63 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 
-import 'package:nutritrack/presentation/pages/login_screen.dart';
+import 'package:nutritrack/common/config/storage.dart';
+import 'package:nutritrack/service/firebase/authentication_service.dart';
 
-class UserClassificationNext extends StatelessWidget {
+class UserClassificationNext extends StatefulWidget {
+  @override
+  _UserClassificationNextState createState() => _UserClassificationNextState();
+}
+
+class _UserClassificationNextState extends State<UserClassificationNext> {
+  // Controllers for the text fields
+  final TextEditingController _weightController = TextEditingController();
+  final TextEditingController _heightController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
+  AuthenticationService _firebaseAuth = AuthenticationService();
+  late String clasification;
+
+  // Variable to manage the selected gender
+  String? _selectedGender;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final state = GoRouterState.of(context);
+    final selected = state.uri.queryParameters['selected'] ?? '';
+    print(
+        'Selected classifications in user classification 2 $selected');
+    clasification = selected;
+  }
+
+  void handleSubmitClasification() async {
+    final weight = double.tryParse(_weightController.text) ?? 0.0;
+    final height = double.tryParse(_heightController.text) ?? 0.0;
+    final age = int.tryParse(_ageController.text) ?? 0;
+    final userId =
+        await SecureStorage().getUserId(); // Await the Future<String?>
+
+    if (weight > 0 &&
+        height > 0 &&
+        age > 0 &&
+        _selectedGender != null &&
+        userId != null) {
+      await _firebaseAuth.submitUserClassification(
+        userId: userId,
+        weight: weight,
+        height: height,
+        classification: clasification,
+        age: age,
+        gender: _selectedGender!,
+        context: context,
+      );
+      _showSuccessDialog(context);
+    } else {
+      print('Please fill out all fields correctly or userId is null.');
+      // Optionally, show an error message to the user
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,17 +84,24 @@ class UserClassificationNext extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildFormField('Berat Badan (kg)'),
+                  _buildFormField('Berat Badan (kg)', _weightController),
                   SizedBox(height: 20.0),
-                  _buildFormField('Tinggi Badan (cm)'),
+                  _buildFormField('Tinggi Badan (cm)', _heightController),
                   SizedBox(height: 20.0),
-                  _buildFormField('Usia'),
+                  _buildFormField('Usia', _ageController),
                   SizedBox(height: 20.0),
                   _buildGenderField(),
                   SizedBox(height: 50.0),
                   ElevatedButton(
                     onPressed: () {
-                      _showSuccessDialog(context);
+                      print('bb : ' + _weightController.text);
+                      print('tb : ' + _heightController.text);
+                      print('age : ' + _ageController.text);
+                      print('gender : ' + _selectedGender!);
+                      print(
+                          'Selected classifications in user classification 2 $clasification');
+                      handleSubmitClasification();
+                      // _showSuccessDialog(context);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green, // Green button color
@@ -57,6 +118,13 @@ class UserClassificationNext extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
+                  ),
+                  SizedBox(height: 20.0),
+                  GestureDetector(
+                    onTap: () {
+                      context.go('/user-clasification');
+                    },
+                    child: Text('Kembali ke user Classification'),
                   ),
                 ],
               ),
@@ -92,17 +160,11 @@ class UserClassificationNext extends StatelessWidget {
     );
 
     Timer(Duration(seconds: 3), () {
-      // Navigator.of(context).pop();
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(
-      //       builder: (context) => LoginPage()), // Navigate to Halaman1
-      // );
       context.go('/home');
     });
   }
 
-  Widget _buildFormField(String label) {
+  Widget _buildFormField(String label, TextEditingController controller) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       decoration: BoxDecoration(
@@ -110,6 +172,8 @@ class UserClassificationNext extends StatelessWidget {
         borderRadius: BorderRadius.circular(8.0),
       ),
       child: TextField(
+        controller: controller,
+        keyboardType:TextInputType.number,
         decoration: InputDecoration(
           border: InputBorder.none,
           labelText: label,
@@ -130,13 +194,18 @@ class UserClassificationNext extends StatelessWidget {
           border: InputBorder.none,
           labelText: 'Gender',
         ),
+        value: _selectedGender,
         items: ['Male', 'Female'].map((String value) {
           return DropdownMenuItem<String>(
             value: value,
             child: Text(value),
           );
         }).toList(),
-        onChanged: (newValue) {},
+        onChanged: (newValue) {
+          setState(() {
+            _selectedGender = newValue;
+          });
+        },
       ),
     );
   }

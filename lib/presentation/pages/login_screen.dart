@@ -61,28 +61,40 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void handleLogin() {
-    //show loading dialog
-    LoadingDialog.showLoadingDialog(context, "Loading...");
-    _firebaseAuthService
-        .loginWithEmailAndPassword(
+  void handleLogin() async {
+    // Show loading dialog
+    // LoadingDialog.showLoadingDialog(context, "Loading...");
+
+    // Attempt to log in with email and password
+    AuthResultStatus status =
+        await _firebaseAuthService.loginWithEmailAndPassword(
       email: _emailController.text,
       password: _passwordController.text,
-    )
-        .then(
-      (status) {
-        // hide loading dialog
-        LoadingDialog.hideLoadingDialog(context);
-
-        if (status == AuthResultStatus.successful) {
-          Fluttertoast.showToast(msg: "Successfully logged in!");
-        } else {
-          final errorMsg =
-              AuthExceptionHandler.generateExceptionMessage(status);
-          Fluttertoast.showToast(msg: errorMsg);
-        }
-      },
     );
+
+    // Hide loading dialog
+    // LoadingDialog.hideLoadingDialog(context);
+
+    // Handle the result
+    if (status == AuthResultStatus.successful) {
+      Fluttertoast.showToast(msg: "Successfully logged in!");
+
+      // Get user ID from secure storage
+      String? userId = await SecureStorage().getUserId();
+
+      // Check if user classification is complete
+      bool isCompleteClassification =
+          await _firebaseAuthService.isClassificationCompleted(userId!);
+
+      if (isCompleteClassification) {
+        context.go('/home');
+      } else {
+        context.go('/user-clasification');
+      }
+    } else {
+      final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
+      Fluttertoast.showToast(msg: errorMsg);
+    }
   }
 
   @override
@@ -165,20 +177,9 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 70),
                       ElevatedButton(
-                        onPressed: () async {
+                        onPressed: () {
                           if (_formKey.currentState!.validate()) {
                             handleLogin();
-                            Future<String?> userId =
-                                SecureStorage().getUserId();
-                            Future<bool> isCompleteClasification =
-                                _firebaseAuthService.isClassificationCompleted(
-                                    userId as String);
-                            if (await isCompleteClasification) {
-                              context.go('/login');
-                            }
-                            context.go('/user-clasification');
-                            // print('validasi berhasil');
-                            // Form is valid, proceed with login
                           }
                         },
                         style: ElevatedButton.styleFrom(
