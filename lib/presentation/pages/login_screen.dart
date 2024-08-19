@@ -18,6 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _obscurePassword = true;
   final AuthenticationService _firebaseAuthService = AuthenticationService();
 
   // Function to validate email format
@@ -151,12 +152,36 @@ class _LoginPageState extends State<LoginPage> {
                         validator: _validateEmail,
                       ),
                       const SizedBox(height: 20),
-                      FormContainerWidget(
+                      TextFormField(
                         controller: _passwordController,
-                        labelText: 'Password',
-                        hintText: 'Enter your password',
-                        isPasswordField: true,
-                        validator: _validatePassword,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
+                          label: Text(
+                            'Password',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        validator: (text) {
+                          if (text == null || text.isEmpty) {
+                            return 'Password is empty';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 20),
                       Align(
