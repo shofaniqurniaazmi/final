@@ -56,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
       if (isCompleteClassification) {
         context.go('/home');
       } else {
-        context.go('/user-classification');
+        context.go('/user-clasification');
       }
     } catch (e) {
       // Handle error (e.g., show a dialog or snackbar)
@@ -96,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
         if (isCompleteClassification) {
           context.go('/home');
         } else {
-          context.go('/user-classification');
+          context.go('/user-clasification');
         }
       } else {
         final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);

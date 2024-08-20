@@ -57,7 +57,7 @@ class Article extends StatelessWidget {
               onPressed: ()async{
                 print('press url launcher');
                 final Uri url = Uri.parse(link);
-                if (await canLauncherUrl(url)) {
+                if (await canLaunchUrl(url)) {
                   await launchUrl(url);
                 } else {
                   throw 'Could not launch $url';
