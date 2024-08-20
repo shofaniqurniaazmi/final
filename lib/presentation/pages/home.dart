@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:nutritrack/common/assets/assets.dart';
@@ -7,6 +9,7 @@ import 'package:nutritrack/presentation/widget/article.dart';
 import 'package:nutritrack/service/firebase/authentication_service.dart';
 import 'package:nutritrack/service/provider/news_provider.dart';
 import 'package:path/path.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,70 +20,26 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final AuthenticationService _firebaseAuth = AuthenticationService();
   late Future<Map<String, dynamic>?> _userProfileFuture;
-  final List<Map<String, String>> news = [
-    {
-      'title': 'Sayuran',
-      'imagePath': sayurImage,
-      'description':
-          'Membantu mengontrol asupan kalori dan memberikan serat yang penting untuk pencernaan.'
-    },
-    {
-      'title': 'Buah-buahan',
-      'imagePath': buahImage,
-      'description':
-          'Kaya akan vitamin dan mineral yang penting untuk kesehatan.'
-    },
-    {
-      'title': 'Ikan',
-      'imagePath': ikanImage,
-      'description': 'Sumber protein dan lemak sehat yang baik untuk jantung.'
-    },
-    {
-      'title': 'Telur',
-      'imagePath': telurImage,
-      'description': 'Penting untuk membangun dan memperbaiki jaringan tubuh.'
-    },
-    {
-      'title': 'Sandwich',
-      'imagePath': sandwichImage,
-      'description':
-          'Membantu mengontrol asupan kalori dan memberikan serat yang penting untuk pencernaan.'
-    },
-    {
-      'title': 'Salad Buah',
-      'imagePath': saladImage,
-      'description':
-          'Kaya akan vitamin dan mineral yang penting untuk kesehatan.'
-    },
-    {
-      'title': 'Capcay',
-      'imagePath': capcayImage,
-      'description': 'Sumber protein dan lemak sehat yang baik untuk jantung.'
-    },
-    {
-      'title': 'Sop Iga',
-      'imagePath': sopigaImage,
-      'description': 'Penting untuk membangun dan memperbaiki jaringan tubuh.'
-    },
-    {
-      'title': 'Capcay',
-      'imagePath': capcayImage,
-      'description': 'Sumber protein dan lemak sehat yang baik untuk jantung.'
-    },
-    {
-      'title': 'Sop Iga',
-      'imagePath': sopigaImage,
-      'description': 'Penting untuk membangun dan memperbaiki jaringan tubuh.'
-    },
-    // Add more items up to 20
-  ];
-  List<Map<String, String>> topNews = [];
-  List<Map<String, String>> otherNews = [];
+  late Future<List<dynamic>> _newsFuture;
 
   @override
   void initState() {
     super.initState();
     _fetchUserProfile();
+    _newsFuture = fetchNews();
+  }
+
+  Future<List<dynamic>> fetchNews() async {
+    final url =
+        'https://newsdata.io/api/1/news?apikey=pub_512145b24e23ed26e817e4017220145129057&country=id&language=id&category=health';
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['results'] as List<dynamic>;
+    } else {
+      throw Exception('Failed to load news');
+    }
   }
 
   void _fetchUserProfile() async {
@@ -123,7 +82,6 @@ class _HomePageState extends State<HomePage> {
                       return Text('No profile data');
                     } else {
                       final profile = snapshot.data!;
-                      final String username = profile['fullName'] ?? 'User';
                       return Container(
                         padding: EdgeInsets.all(16.0),
                         decoration: BoxDecoration(
@@ -146,7 +104,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             SizedBox(width: 10.0),
                             Text(
-                              'Hello, $username!',
+                              'Hello, ${profile['fullName']}!',
                               style: TextStyle(
                                 fontSize: 18.0,
                                 fontWeight: FontWeight.bold,
@@ -262,93 +220,103 @@ class _HomePageState extends State<HomePage> {
                   topRight: Radius.circular(40.0),
                 ),
               ),
-              child: Consumer<NewsProvider>(
-                builder: (context, newsProvider, child) {
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: 'Search',
-                            prefixIcon: Icon(Icons.search),
-                            filled: true,
-                            fillColor: Colors.purple,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30.0),
-                              borderSide: BorderSide.none,
+              child: FutureBuilder<List<dynamic>>(
+                future: _newsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData ||
+                      snapshot.data == null ||
+                      snapshot.data!.isEmpty) {
+                    return Center(
+                        child: Text('No news available',
+                            style:
+                                TextStyle(fontSize: 16.0, color: Colors.grey)));
+                  } else {
+                    final newsList = snapshot.data!;
+                    final topNews = newsList.take(5).toList();
+                    final otherNews = newsList.skip(5).take(5).toList();
+                    print(otherNews);
+                    return Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Search',
+                              prefixIcon: Icon(Icons.search),
+                              filled: true,
+                              fillColor: Colors.purple,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30.0),
+                                borderSide: BorderSide.none,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      SizedBox(height: 10.0),
-                      Text(
-                        'Top News',
-                        style: TextStyle(
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.bold,
+                        SizedBox(height: 10.0),
+                        Text(
+                          'Top News',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 10.0),
-                      Container(
-                        height:
-                            150.0, // Set the height of the container to fit the cards
-                        child: ListView.builder(
-                          scrollDirection:
-                              Axis.horizontal, // Enable horizontal scrolling
-                          itemCount: newsProvider
-                              .firstGroupNews.length, // Adjusted to the actual length
-                          itemBuilder: (context, index) {
-                            final newsItem = newsProvider.firstGroupNews[index];
-                            return Row(
-                              children: [
-                                buildRecommendationCard(
+                        SizedBox(height: 10.0),
+                        SizedBox(
+                          height: 150.0,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: topNews.length,
+                            itemBuilder: (context, index) {
+                              final newsItem = topNews[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 10.0),
+                                child: buildRecommendationCard(
                                   context,
-                                  newsItem.title!,
-                                  newsItem.imageUrl!,
-                                  newsItem.description!,
+                                  newsItem['title'] ?? 'No title',
+                                  newsItem['image_url'] ?? '',
+                                  newsItem['description'] ?? 'No description',
+                                  newsItem['link']??'',
                                 ),
-                                SizedBox(width: 10.0), // Space between cards
-                              ],
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 20.0),
-                      Text(
-                        'Other News',
-                        style: TextStyle(
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.bold,
+                        SizedBox(height: 20.0),
+                        Text(
+                          'Other News',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 10.0),
-                      Container(
-                        height:
-                            150.0, // Set the height of the container to fit the cards
-                        child: ListView.builder(
-                          scrollDirection:
-                              Axis.horizontal, // Enable horizontal scrolling
-                          itemCount: newsProvider.secondGroupNews
-                              .length, // Adjusted to the actual length
-                          itemBuilder: (context, index) {
-                            final newsItem = newsProvider.secondGroupNews[index];
-                            return Row(
-                              children: [
-                                buildRecommendationCard(
+                        SizedBox(height: 10.0),
+                        SizedBox(
+                          height: 150.0,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: otherNews.length,
+                            itemBuilder: (context, index) {
+                              final newsItem = otherNews[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 10.0),
+                                child: buildRecommendationCard(
                                   context,
-                                  newsItem.title!,
-                                  newsItem.imageUrl!,
-                                  newsItem.description!,
+                                  newsItem['title'] ?? 'No title',
+                                  newsItem['image_url'] ?? '',
+                                  newsItem['description'] ?? 'No description',
+                                  newsItem['link']??'',
                                 ),
-                                SizedBox(width: 10.0), // Space between cards
-                              ],
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                    ],
-                  );
+                      ],
+                    );
+                  }
                 },
               ),
             ),
@@ -359,13 +327,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buildRecommendationCard(BuildContext context, String title,
-      String imagePath, String description) {
+      String imagePath, String description,String link) {
     return InkWell(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => Article(
+              link: link,
               imagePath: imagePath,
               title: title,
               description: description,
@@ -382,7 +351,7 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.asset(
+              Image.network(
                 imagePath,
                 height: 80.0,
                 width: double.infinity,
@@ -393,9 +362,11 @@ class _HomePageState extends State<HomePage> {
                 child: Text(
                   title,
                   style: TextStyle(
-                    fontSize: 16.0,
+                    fontSize: 12.0,
+                    overflow: TextOverflow.ellipsis,
                     fontWeight: FontWeight.bold,
                   ),
+                  maxLines: 2,
                 ),
               ),
             ],

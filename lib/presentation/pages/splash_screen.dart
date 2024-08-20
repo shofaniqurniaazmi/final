@@ -20,14 +20,11 @@ class _SplashScreenState extends State<SplashScreen> {
     return userId!;
   }
 
+
   void initState() {
     // TODO: implement initState
     super.initState();
-    Future<String> userId = isLogin();
     Timer(Duration(seconds: 2), () {
-      if (userId != null) {
-        context.go('/home');
-      }
       Navigator.push(
           context,
           MaterialPageRoute(

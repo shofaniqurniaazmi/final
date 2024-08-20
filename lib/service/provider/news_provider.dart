@@ -1,12 +1,11 @@
-import 'package:dio/dio.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:nutritrack/common/config/env.dart';
+import 'package:http/http.dart' as http;
 import 'package:nutritrack/model/news.dart';
 
 class NewsProvider with ChangeNotifier {
   News? _news;
   bool _isLoading = false;
-  bool _hasLoadedOnce = false;
   List<Results> _firstGroupNews = [];
   List<Results> _secondGroupNews = [];
 
@@ -16,24 +15,20 @@ class NewsProvider with ChangeNotifier {
   List<Results> get firstGroupNews => _firstGroupNews;
   List<Results> get secondGroupNews => _secondGroupNews;
 
-  final Dio _dio = Dio();
-
   final String _url =
-      'https://newsdata.io/api/1/news?apikey=${apiKeyNews}&country=id&language=id&category=health';
+      'https://newsdata.io/api/1/news?apikey=pub_512145b24e23ed26e817e4017220145129057&country=id&language=id&category=health';
 
   Future<void> fetchNews() async {
-    if (_hasLoadedOnce) return;
-
     _isLoading = true;
     notifyListeners();
 
     try {
-      final response = await _dio.get(_url);
-
+      final response = await http.get(Uri.parse(_url));
+      print('response status code ${response.statusCode}');
       if (response.statusCode == 200) {
-        final data = response.data;
+        final data = json.decode(response.body);
+        print('print response langsung $data');
         _news = News.fromJson(data);
-        _hasLoadedOnce = true;
 
         // Membagi berita menjadi dua kelompok
         _divideNews();
