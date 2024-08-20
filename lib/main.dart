@@ -14,10 +14,19 @@ import 'package:nutritrack/presentation/pages/splash_screen.dart';
 import 'package:nutritrack/presentation/pages/user_clasification.dart';
 import 'package:nutritrack/presentation/pages/user_clasification2.dart';
 import 'package:nutritrack/presentation/widget/bottom_bar.dart';
+import 'package:nutritrack/service/provider/news_provider.dart';
+import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => NewsProvider()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 

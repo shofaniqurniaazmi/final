@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nutritrack/common/assets/assets.dart';
+import 'package:nutritrack/common/config/storage.dart';
 import 'package:nutritrack/presentation/pages/onboard.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -13,10 +15,19 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   @override
+  Future<String> isLogin() async {
+    String? userId = await SecureStorage().getUserId();
+    return userId!;
+  }
+
   void initState() {
     // TODO: implement initState
     super.initState();
+    Future<String> userId = isLogin();
     Timer(Duration(seconds: 2), () {
+      if (userId != null) {
+        context.go('/home');
+      }
       Navigator.push(
           context,
           MaterialPageRoute(
